@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gerador de Anúncios AI
 
-## Getting Started
+## Sobre o Projeto
 
-First, run the development server:
+O Gerador de Anúncios AI é uma aplicação web que utiliza inteligência artificial para criar cópias de anúncios personalizadas. Esta ferramenta é projetada para ajudar profissionais de marketing e empresas a gerar conteúdo publicitário de forma rápida e eficiente.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Stack Tecnológica
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Frontend**: React.js com Next.js
+- **Backend**: Node.js com Express
+- **AI**: OpenAI API
+- **Estilização**: CSS Modules ou Styled Components (especificar qual está sendo usado)
+- **Deployment**: Vercel (ou especificar outra plataforma, se aplicável)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pré-requisitos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Antes de começar, certifique-se de ter instalado em sua máquina:
 
-## Learn More
+- Node.js (versão 14.x ou superior)
+- npm (normalmente vem com Node.js)
+- Uma conta na OpenAI com acesso à API
 
-To learn more about Next.js, take a look at the following resources:
+## Instalação
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Clone o repositório:
+   ```
+   git clone https://github.com/seu-usuario/gerador-de-anuncios-ai.git
+   cd gerador-de-anuncios-ai
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. Instale as dependências:
+   ```
+   npm install
+   ```
 
-## Deploy on Vercel
+3. Configure as variáveis de ambiente:
+   Crie um arquivo `.env` na raiz do projeto e adicione sua chave API da OpenAI:
+   ```
+   OPENAI_API_KEY=sua_chave_api_aqui
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. Inicie o servidor de desenvolvimento:
+   ```
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Acesse `http://localhost:3000` no seu navegador.
+
+## Uso
+
+1. Na página inicial, você verá um formulário para inserir detalhes sobre o produto ou serviço para o qual deseja criar um anúncio.
+
+2. Preencha os campos com informações relevantes, como nome do produto, características principais, público-alvo, etc.
+
+3. Clique em "Gerar Anúncio" e aguarde enquanto a IA processa sua solicitação.
+
+4. O anúncio gerado será exibido na tela. Você pode copiar o texto ou solicitar uma nova versão, se necessário.
+
+## Estrutura do Projeto
+
+- `pages/`: Contém as rotas e páginas da aplicação Next.js
+- `components/`: Componentes React reutilizáveis
+- `pages/api/`: Endpoints da API, incluindo a integração com a OpenAI
+- `styles/`: Arquivos de estilo (CSS ou Styled Components)
+- `public/`: Arquivos estáticos como imagens e fontes
+
+## Contribuindo
+
+Contribuições são sempre bem-vindas! Por favor, leia o guia de contribuição para saber como contribuir corretamente para este projeto.
+
+## Licença
+
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE.md](LICENSE.md) para detalhes.
+
+## Contato
+
+Seu Nome - [@seu_twitter](https://twitter.com/seu_twitter) - seuemail@exemplo.com
+
+Link do Projeto: [https://github.com/seu-usuario/gerador-de-anuncios-ai](https://github.com/seu-usuario/gerador-de-anuncios-ai)
+
+## Agradecimentos
+
+- OpenAI pela incrível API
+- Next.js pela framework React
+- Todos os contribuidores e usuários deste projeto
