@@ -62,94 +62,99 @@ async function scrapeKeywords(urls: string[]): Promise<string[]> {
     }
   }
 
-  return [...new Set(keywords)]; // Remove duplicatas
+  return Array.from(new Set(keywords)); // Corrigido para usar Array.from()
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Método não permitido' })
-  }
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'POST') {
+    try {
+      const { 
+        url, 
+        keywords: providedKeywords,
+        campaignType,
+        language,
+        tone,
+        description,
+        searchTerm,
+        target,
+        differentials,
+        finalUrl,
+        competitors,
+        ctaCategory,
+        cta
+      } = req.body;
 
-  try {
-    const userInput = req.body
+      // Verificar campos obrigatórios
+      if (!campaignType || !language || !tone || !description || !searchTerm || !target || !differentials) {
+        return res.status(400).json({ error: 'Campos obrigatórios não fornecidos' });
+      }
 
-    // Fazer scraping das palavras-chave dos sites concorrentes
-    const competitorUrls = userInput.competitors.split('\n').map((url: string) => url.trim());
-    const scrapedKeywords = await scrapeKeywords(competitorUrls);
+      // Se url não for fornecida, use finalUrl
+      const urlToUse = url || finalUrl;
 
-    const prompt = `Gere um anúncio para uma campanha ${userInput.campaignType} com as seguintes características:
-    Idioma: ${userInput.language}
-    Tom de voz: ${userInput.tone}
-    Descrição do produto/serviço: ${userInput.description}
-    Público-alvo: ${userInput.target}
-    Diferenciais: ${userInput.differentials}
-    Call to Action (CTA): ${userInput.cta}
-    URL Final: ${userInput.finalUrl}
-    Sites concorrentes: ${userInput.competitors}
-    Palavras-chave dos concorrentes: ${scrapedKeywords.join(', ')}
+      if (!urlToUse) {
+        return res.status(400).json({ error: 'URL não fornecida' });
+      }
 
-    Forneça o seguinte:
-    1. Uma lista de palavras-chave relevantes (máximo 10), incluindo algumas das palavras-chave dos concorrentes se relevantes
-    2. 15 headlines (títulos curtos) com EXATAMENTE 30 caracteres cada
-    3. ${userInput.campaignType === 'pmax' ? '5 títulos longos' : ''}
-    4. ${userInput.campaignType === 'search' ? '4' : '5'} descrições com EXATAMENTE 90 caracteres cada
+      const scrapedKeywords = providedKeywords || await scrapeKeywords([urlToUse]);
 
-    Certifique-se de incorporar o CTA "${userInput.cta}" em pelo menos um headline e uma descrição.
+      const prompt = `Crie um anúncio ${campaignType === 'search' ? 'de pesquisa' : 'de performance max'} em ${language} com tom ${tone}.
+      Produto/Serviço: ${description}
+      Termo de pesquisa principal: ${searchTerm}
+      Público-alvo: ${target}
+      Diferenciais: ${differentials}
+      ${finalUrl ? `URL Final: ${finalUrl}` : ''}
+      ${competitors ? `Concorrentes: ${competitors}` : ''}
+      ${ctaCategory ? `Categoria CTA: ${ctaCategory}` : ''}
+      ${cta ? `CTA: ${cta}` : ''}
 
-    Por favor, formate a saída da seguinte maneira:
-    Palavras-chave: palavra1, palavra2, palavra3, ...
-    Headline 1: [texto do headline de 30 caracteres]
-    Headline 2: [texto do headline de 30 caracteres]
-    ...
-    Headline 15: [texto do headline de 30 caracteres]
-    ${userInput.campaignType === 'pmax' ? `Título longo 1: [texto do título longo]
-    Título longo 2: [texto do título longo]
-    ...
-    Título longo 5: [texto do título longo]
-    ` : ''}
-    Descrição 1: [texto da descrição de 90 caracteres]
-    Descrição 2: [texto da descrição de 90 caracteres]
-    ...
-    Descrição ${userInput.campaignType === 'search' ? '4' : '5'}: [texto da descrição de 90 caracteres]
+      O anúncio deve ser altamente relevante para o termo de pesquisa "${searchTerm}" para garantir uma qualidade excelente. Use este termo de forma estratégica nos títulos e descrições.
 
-    É CRUCIAL que os headlines tenham EXATAMENTE 30 caracteres, os títulos longos tenham NO MÍNIMO 70 caracteres e as descrições tenham EXATAMENTE 90 caracteres. Ajuste o texto conforme necessário para atender a esses limites, sem cortar palavras no meio. Se não for possível atingir exatamente o número de caracteres solicitado, forneça o texto mais próximo possível do limite, mantendo a integridade das palavras.`
+      Forneça:
+      1. Uma lista de palavras-chave relacionadas ao termo de pesquisa e ao produto/serviço.
+      2. 15 headlines (títulos curtos) de até 30 caracteres.
+      ${campaignType === 'pmax' ? '3. 5 títulos longos de até 90 caracteres.' : ''}
+      ${campaignType === 'pmax' ? '4.' : '3.'} 5 descrições de até 90 caracteres.
 
-    const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-    })
+      Formate a saída em JSON.`;
 
-    const content = chatCompletion.choices[0].message.content
+      const chatCompletion = await openai.chat.completions.create({
+        model: "gpt-4o", 
+        messages: [{ role: "user", content: prompt }],
+      })
 
-    if (!content) {
-      throw new Error('Conteúdo não gerado')
+      const content = chatCompletion.choices[0].message.content
+
+      if (!content) {
+        throw new Error('Conteúdo não gerado')
+      }
+
+      // Analisar o conteúdo gerado
+      const lines = content.split('\n')
+      const extractedKeywords = lines.find(line => line.startsWith('Palavras-chave:'))?.replace('Palavras-chave:', '').trim() || ''
+      const headlines = lines
+        .filter(line => line.startsWith('Headline'))
+        .map(line => adjustTextLength(line.split(':')[1].trim(), 30, 25));
+      const longTitles = campaignType === 'pmax' 
+        ? lines.filter(line => line.startsWith('Título longo')).map(line => adjustTextLength(line.split(':')[1].trim(), 90, 70)) 
+        : []
+      const descriptions = lines
+        .filter(line => line.startsWith('Descrição'))
+        .map(line => adjustTextLength(line.split(':')[1].trim(), 90, 80));
+
+      res.status(200).json({
+        keywords: extractedKeywords,
+        headlines,
+        longTitles,
+        descriptions,
+        scrapedKeywords,
+      })
+    } catch (error) {
+      console.error('Erro ao gerar o anúncio:', error)
+      res.status(500).json({ error: 'Erro ao gerar o anúncio' })
     }
-
-    // Analisar o conteúdo gerado
-    const lines = content.split('\n')
-    const keywords = lines.find(line => line.startsWith('Palavras-chave:'))?.replace('Palavras-chave:', '').trim() || ''
-    const headlines = lines
-      .filter(line => line.startsWith('Headline'))
-      .map(line => adjustTextLength(line.split(':')[1].trim(), 30, 25));
-    const longTitles = userInput.campaignType === 'pmax' 
-      ? lines.filter(line => line.startsWith('Título longo')).map(line => adjustTextLength(line.split(':')[1].trim(), 90, 70)) 
-      : []
-    const descriptions = lines
-      .filter(line => line.startsWith('Descrição'))
-      .map(line => adjustTextLength(line.split(':')[1].trim(), 90, 80));
-
-    res.status(200).json({
-      keywords,
-      headlines,
-      longTitles,
-      descriptions,
-      scrapedKeywords, // Adicione esta linha para incluir as palavras-chave extraídas
-    })
-  } catch (error) {
-    console.error('Erro ao gerar o anúncio:', error)
-    res.status(500).json({ message: 'Erro ao gerar o anúncio' })
+  } else {
+    res.setHeader('Allow', ['POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
