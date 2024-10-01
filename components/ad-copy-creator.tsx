@@ -12,11 +12,12 @@ import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import Head from 'next/head'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head />
+      <Head />
       <body>
         <main>{children}</main>
         <Toaster />
@@ -194,10 +195,6 @@ export function AdCopyCreatorComponent() {
 
   const getCharacterCount = (text: string) => text.length;
   const getProgressPercentage = (count: number, limit: number) => Math.min((count / limit) * 100, 100);
-
-  const validateContentLength = (content: string, expectedLength: number) => {
-    return content.length === expectedLength;
-  };
 
   const cleanAndCountCharacters = (text: string, expectedLength: number) => {
     const cleanedText = text.trim();
